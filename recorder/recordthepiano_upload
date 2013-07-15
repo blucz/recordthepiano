@@ -1,0 +1,52 @@
+#!/usr/bin/env ruby 
+
+require 'soundcloud'
+
+if (ARGV.length != 1)
+    puts "usage: soundcloud_upload.rb <filename>"
+    exit 1 
+end
+
+filename = ARGV[0]
+username = nil
+password = nil
+
+loginpath = File.join(ENV['HOME'], '.soundcloudlogin')
+File.open(loginpath, 'r').each do |line|
+    line = line.strip
+    if line != '' then
+        if (username == nil)
+            username = line
+        elsif (password == nil)
+            password = line
+        else
+            puts "too many lines in ~/.soundcloudlogin"
+            exit 1
+        end
+    end
+end if File.exists?(loginpath)
+
+if (username == nil or password == nil) 
+    puts "make sure that a file exists in $HOME called .soundcloudlogin with username/passwd on two separate lines"
+    exit 1
+end
+
+client = Soundcloud.new(:client_id     => 'ec8a506faf1c8b5e9fbf1c0269115399',
+                        :client_secret => 'c0368b39183e663ad6d48a24c7fb7343',
+                        :username      => username,
+                        :password      => password)
+
+username = client.get('/me').username
+puts "logged in user: #{username}"
+
+# upload an audio file
+track = client.post('/tracks', :track => {
+    :title        => DateTime.now.httpdate, 
+    :asset_data   => File.new(filename, 'rb'),
+    :sharing      => 'public',
+    :downloadable => true,
+})
+
+# print track link
+puts "uploaded: #{track.permalink_url}"
+exit 0

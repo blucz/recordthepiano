@@ -38,4 +38,5 @@ install: $(TARGET)
 	mkdir -p /var/log/recordthepiano
 	chown recordthepiano.recordthepiano /var/log/recordthepiano -R
 	install -m 0755 $(TARGET) $(DESTDIR)/bin/$(TARGET)
+	install -m 0755 recordthepiano_upload $(DESTDIR)/bin/recordthepiano_upload
 	install -m 0755 init.d/recordthepiano /etc/init.d/recordthepiano

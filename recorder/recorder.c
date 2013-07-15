@@ -139,12 +139,9 @@ int run(int device) {
                 struct tm start_time;
                 time_t tt = time(NULL);
                 localtime_r(&tt, &start_time);
-                snprintf(filenamebuf, sizeof(filenamebuf), "%04d-%02d-%02d_%02d_%02d_%02d.flac", 
-                         start_time.tm_year + 1900, start_time.tm_mon+1, start_time.tm_mday,
-                         start_time.tm_hour, start_time.tm_min, start_time.tm_sec);
-                snprintf(tmpfilenamebuf, sizeof(filenamebuf), "%04d-%02d-%02d_%02d_%02d_%02d.flac.tmp", 
-                         start_time.tm_year + 1900, start_time.tm_mon+1, start_time.tm_mday,
-                         start_time.tm_hour, start_time.tm_min, start_time.tm_sec);
+                strftime(filenamebuf, sizeof(filenamebuf), "%Y-%m-%dT%H:%M:%S%z", &start_time);
+                strftime(tmpfilenamebuf, sizeof(filenamebuf), "%Y-%m-%dT%H:%M:%S%z", &start_time);
+                strcat(tmpfilenamebuf, ".flac.tmp");
 
                 file = fopen(tmpfilenamebuf, "wb");
                 if (file == NULL) {
@@ -182,12 +179,16 @@ int run(int device) {
             if (loud_bufs == 0 && recording && record_buffers > RECORD_MIN_NBUFFERS) {
                 long long end_record_start = now_us();
                 tracef("stop recording (%d loud bufs / %d)", loud_bufs, PREROLL_NBUFFERS);
+                int n_seconds = (int)((long long)record_buffers * (long long)FRAMES_PER_BUFFER /  (long long)SAMPLE_RATE);
                 recording = 0;
                 record_buffers = 0;
                 FLAC__stream_encoder_finish(encoder);
                 FLAC__stream_encoder_delete(encoder);
                 encoder = NULL;
                 file    = NULL;
+                char numbuf[128];
+                snprintf(numbuf, sizeof(numbuf), ",%ds.flac", n_seconds);
+                strcat(filenamebuf, numbuf);
                 rename(tmpfilenamebuf, filenamebuf);
 
                 long long end_record_end = now_us();
@@ -228,14 +229,13 @@ top:
             const char *filename = ent->d_name;
             if (strcmp(filename + strlen(filename) - 5, ".flac")) continue;         // only upload flacs
             long long upload_start = now_us();
-            tracef("uploading %s to s3", filename);
+            tracef("uploading %s to soundcloud", filename);
             char cmdbuf[4096];
-            snprintf(cmdbuf, sizeof(cmdbuf),  "s3cmd put -P '%s' 's3://recordthepiano/%s'", filename, filename);
+            snprintf(cmdbuf, sizeof(cmdbuf),  "recordthepiano_upload '%s'", filename);
             int rc = system(cmdbuf);
             long long upload_end = now_us();
             if (rc == 0) {
                 tracef("uploaded succeeded in %dms", (int)((upload_end - upload_start) / 1000));
-                tracef("url: http://recordthepiano.s3.amazonaws.com/%s", filename);
                 unlink(filename);
                 closedir(dir);
                 goto top;
