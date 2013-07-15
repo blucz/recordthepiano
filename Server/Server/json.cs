@@ -6,7 +6,7 @@ using System.Text;
 // when using JSON.JsonHydrate:
 // using System.Dynamic;
 
-namespace Sooloos
+namespace Utils
 {
     /// <summary>
     /// This class encodes and decodes JSON strings.

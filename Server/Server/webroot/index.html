@@ -1,4 +1,4 @@
-<html>
+<html ng-app='recordthepiano.app'>
     <head>
         <title>Record The Piano</title>
         <link href="css/style.css" rel="stylesheet" type="text/css" />
@@ -8,6 +8,22 @@
         <script src="js/main.js"></script>
     </head>
     <body>
-        testing, 1, 2, 3...
+        <div id='header'>
+            record the piano
+        </div>
+        <div id='main' ng-controller='MainController'>
+            <div ng-repeat='recording in recordings'>
+                <div class='recording'>
+                    <div class='title'>
+                        {{recording.title}}
+                    </div>
+                    <div class='notes'>
+                        {{recording.notes}}
+                    </div>
+                    <audio controls='controls' ng-src='{{recording.url}}'>
+                    </audio>
+                </div>
+            </div>
+        </div>
     </body>
 </html>
