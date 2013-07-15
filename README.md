@@ -1,7 +1,10 @@
-recordthepiano
-==============
+record the piano
+================
 
-24/7 automatic recording, flac encode, upload, and listening ui for Yamaha N3 Piano.
+Automatic 24/7 recording and soundcloud upload for my Yamaha N3 Piano.
+
+How it works
+------------
 
 A tiny embedded linux device (Odroid-U2) is plugged into a little Behringer USB mixer via USB, which is plugged into the piano using analog audio cables.
 
