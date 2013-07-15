@@ -32,4 +32,4 @@ Bugs
 
 - Right now all the tunables, are hardcoded in recorder.c
 - Right now, it looks for my USB audio device by name. This should be done in a less gross way.
-- 
+
