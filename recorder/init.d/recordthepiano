@@ -3,6 +3,7 @@
 NAME=recordthepiano
 RUNDIR=/var/lib/recordthepiano
 
+PATH=/usr/local/bin:$PATH
 DESC=$NAME
 APP=/usr/local/bin/recordthepiano
 USER=recordthepiano

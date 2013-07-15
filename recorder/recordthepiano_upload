@@ -41,10 +41,11 @@ puts "logged in user: #{username}"
 
 # upload an audio file
 track = client.post('/tracks', :track => {
-    :title        => DateTime.now.httpdate, 
+    :title        => DateTime.now.strftime("%a, %e %b %Y %l:%M:%S %p"),
     :asset_data   => File.new(filename, 'rb'),
     :sharing      => 'public',
     :downloadable => true,
+    :artwork_data => File.new(File.join(File.dirname(__FILE__), "..", "share", "recordthepiano", "logo.png"), 'rb')
 })
 
 # print track link

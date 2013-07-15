@@ -40,3 +40,4 @@ install: $(TARGET)
 	install -m 0755 $(TARGET) $(DESTDIR)/bin/$(TARGET)
 	install -m 0755 recordthepiano_upload $(DESTDIR)/bin/recordthepiano_upload
 	install -m 0755 init.d/recordthepiano /etc/init.d/recordthepiano
+	install -D -m 0644 logo.png $(DESTDIR)/share/recordthepiano/logo.png

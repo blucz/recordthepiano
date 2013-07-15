@@ -11,15 +11,15 @@
 #include <dirent.h>
 #include <FLAC/all.h>
 
-const char  *DEVICE_NAME            = "USB Audio CODEC: USB Audio (hw:1,0)";
-const int    SAMPLE_RATE            = 44100;
-const int    CHANNELS               = 2;
-const int    FRAMES_PER_BUFFER      = 8820;
+const char  *DEVICE_NAME                  = "USB Audio CODEC: USB Audio (hw:1,0)";
+const int    SAMPLE_RATE                  = 44100;
+const int    CHANNELS                     = 2;
+const int    FRAMES_PER_BUFFER            = 8820;
 
-const int    BASE_RMS_NBUFFERS      = 10;        // number of buffers of audio to use when determining the 'quiet' audio level at startup
-const int    PREROLL_NBUFFERS       = 15;        // number of buffers of pre-roll to keep around 
-const int    RECORD_MIN_NBUFFERS    = 20;        // minimum length of a recording, in buffers
-const double NOISE_THRESHOLD        = 1.3;       // if RMS for a buffer > base_rms * NOISE_THRESHOLD, then it is considered noisy
+const int    BASE_RMS_NBUFFERS            = 10;        // number of buffers of audio to use when determining the 'quiet' audio level at startup
+const int    PREROLL_NBUFFERS             = 15;        // number of buffers of pre-roll to keep around 
+const double NOISE_THRESHOLD              = 1.3;       // if RMS for a buffer > base_rms * NOISE_THRESHOLD, then it is considered noisy
+const int    MIN_RECORDING_LENGTH_SECONDS = 15;
 
 void tracef(const char *fmt, ...) {
     va_list ap;
@@ -176,7 +176,7 @@ int run(int device) {
                 long long begin_record_end = now_us();
                 tracef("started recording in %dms", (int)((begin_record_end - begin_record_start) / 1000));
             }
-            if (loud_bufs == 0 && recording && record_buffers > RECORD_MIN_NBUFFERS) {
+            if (loud_bufs == 0 && recording) {
                 long long end_record_start = now_us();
                 tracef("stop recording (%d loud bufs / %d)", loud_bufs, PREROLL_NBUFFERS);
                 int n_seconds = (int)((long long)record_buffers * (long long)FRAMES_PER_BUFFER /  (long long)SAMPLE_RATE);
@@ -187,9 +187,14 @@ int run(int device) {
                 encoder = NULL;
                 file    = NULL;
                 char numbuf[128];
-                snprintf(numbuf, sizeof(numbuf), ",%ds.flac", n_seconds);
-                strcat(filenamebuf, numbuf);
-                rename(tmpfilenamebuf, filenamebuf);
+                if (n_seconds < MIN_RECORDING_LENGTH_SECONDS) {
+                    tracef("discarding recording because too short (%ds < %ds)", n_seconds, MIN_RECORDING_LENGTH_SECONDS);
+                    unlink(tmpfilenamebuf);
+                } else {
+                    snprintf(numbuf, sizeof(numbuf), ",%ds.flac", n_seconds);
+                    strcat(filenamebuf, numbuf);
+                    rename(tmpfilenamebuf, filenamebuf);
+                }
 
                 long long end_record_end = now_us();
                 tracef("finalized recording in %dms", (int)((end_record_end - end_record_start) / 1000));
