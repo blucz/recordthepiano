@@ -14,7 +14,7 @@ The recordthepiano app listens to the audio output from the piano constantly, mo
 automatically starts/stops recording based on whether the piano is making noise.
 
 Recorded audio is encoded in 44100/16/2 FLAC in real-time. As soon as a recording is completed, the recordthepiano 
-app invokes recordthepiano_upload, a ruby script, that uplaods the FLAC to my soundcloud account:
+app invokes recordthepiano_upload, a ruby script, that uploads the FLAC to my soundcloud account:
 
 https://soundcloud.com/blucz
 
@@ -30,6 +30,6 @@ Dependencies
 Bugs
 ----
 
-- Right now all the tunables, are hardcoded in recorder.c
+- Right now all the tunables are hardcoded in recorder.c
 - Right now, it looks for my USB audio device by name. This should be done in a less gross way.
 
