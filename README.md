@@ -49,7 +49,7 @@ Commands:
 
 Status messages:
 
-    level <rms level>           - indicates noise level of last 0.2s buffer
+    level <rms level>           - indicates noise level of last 0.1s buffer
     state <state>               - indicates the current state (idle,recording,paused,initializing)
     mode <mode>                 - indicates the current record mode (audo,manual)
     clip <nframes>              - indicates that <nframes> frames have clipped
