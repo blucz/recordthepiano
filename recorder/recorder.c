@@ -32,10 +32,10 @@
 const char  *DEVICE_NAME                  = "USB Audio CODEC: USB Audio (hw:1,0)";
 const int    SAMPLE_RATE                  = 44100;
 const int    CHANNELS                     = 2;
-const int    FRAMES_PER_BUFFER            = 8820;
+const int    FRAMES_PER_BUFFER            = 4410;
 
-const int    BASE_RMS_NBUFFERS            = 10;        // number of buffers of audio to use when determining the 'quiet' audio level at startup
-const int    PREROLL_NBUFFERS             = 15;        // number of buffers of pre-roll to keep around 
+const int    BASE_RMS_NBUFFERS            = 20;        // number of buffers of audio to use when determining the 'quiet' audio level at startup
+const int    PREROLL_NBUFFERS             = 25;        // number of buffers of pre-roll to keep around 
 const double NOISE_THRESHOLD              = 1.3;       // if RMS for a buffer > base_rms * NOISE_THRESHOLD, then it is considered noisy
 const int    MIN_RECORDING_LENGTH_SECONDS = 15;
 
