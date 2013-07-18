@@ -6,8 +6,8 @@ RUNDIR=/var/lib/recordthepiano
 PATH=/usr/local/bin:$PATH
 DESC=$NAME
 APP=/usr/local/bin/recordthepiano
-USER=recordthepiano
-GROUP=recordthepiano
+USER=root
+GROUP=root
 PIDFILE=/var/run/recordthepiano.pid
 LOGFILE=/var/log/recordthepiano/recordthepiano.log
 

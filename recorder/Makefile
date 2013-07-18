@@ -8,6 +8,7 @@ UNAME=$(shell uname)
 
 SOURCES =	\
     recorder.c	\
+    utils.c	\
 
 ifndef DESTDIR
     DESTDIR := /usr/local
