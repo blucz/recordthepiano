@@ -27,6 +27,33 @@ Dependencies
 - Ruby v1.9.x with 'soundcloud' gem
 - libFlac dev package
 
+Network Protocol
+----------------
+
+recordthepiano can be controlled by a network protocol. 
+
+It listens to TCP port 10123. The protocol is line-based. Lines are terminated by '\n'. You can play with the protocol
+by using nc to connect to the port.
+
+Clients send commands to recordthepiano + receive status messages.
+
+Commands:
+
+    auto        - switch into automatic recording mode 
+    manual      - switch into manual recording mode 
+    stop        - finish recording + upload to soundcloud
+    cancel      - finish recording + discard
+    pause       - pause recording
+    unpause     - unpause recording
+    initialize  - cancel any current recording and re-calibrate base noise level
+
+Status messages:
+
+    level <rms level>           - indicates noise level of last 0.2s buffer
+    state <state>               - indicates the current state (idle,recording,paused,initializing)
+    mode <mode>                 - indicates the current record mode (audo,manual)
+    clip <nframes>              - indicates that <nframes> frames have clipped
+
 Bugs
 ----
 
