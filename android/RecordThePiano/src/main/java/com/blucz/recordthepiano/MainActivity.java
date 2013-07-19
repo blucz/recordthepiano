@@ -7,7 +7,9 @@ import android.app.FragmentTransaction;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.ServiceConnection;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -176,6 +178,19 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                         refresh();
                     }
                 });
+                service.setOnClipListener(new NetworkService.OnClipListener() {
+                    @Override
+                    public void onClip(int nframes) {
+                        if (service == null || root_view == null) return;
+                        level_meter.setBackgroundColor(Color.RED);
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                level_meter.setBackgroundColor(Color.TRANSPARENT);
+                            }
+                        }, 500);
+                    }
+                });
                 refresh();
             }
             @Override
@@ -183,11 +198,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         };
 
         void refresh() {
-            if (root_view == null || service == null) {
-                return;
-            }
+            if (root_view == null) return;
 
-            if (service.getConnectionState() == NetworkService.CONNECTED) {
+            if (service != null && service.getConnectionState() == NetworkService.CONNECTED) {
                 root_view.setEnabled(true);
 
                 double  time        = service.getTime();
@@ -270,10 +283,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            if (root_view == null) {
+            if (service == null) {
                 Intent intent = new Intent(this.getActivity(), NetworkService.class);
                 this.getActivity().bindService(intent, connection, Context.BIND_AUTO_CREATE);
-
+            }
+            if (root_view == null) {
                 root_view       = inflater.inflate(R.layout.fragment_controls, container, false);
                 time_view       = (TextView)root_view.findViewById(R.id.time_text);
                 state_view      = (TextView)root_view.findViewById(R.id.state_text);
@@ -288,6 +302,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 auto_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                        if (service == null) return;
                         if (b) {
                             service.setAutoMode();
                         } else {
@@ -299,6 +314,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 record_button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        if (service == null) return;
                         service.record();
                     }
                 });
@@ -306,6 +322,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 play_button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        if (service == null) return;
                         service.unpause();
                     }
                 });
@@ -313,6 +330,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 stop_button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        if (service == null) return;
                         service.stop();
                     }
                 });
@@ -320,6 +338,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 discard_button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        if (service == null) return;
                         service.cancel();
                     }
                 });
@@ -327,6 +346,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                 pause_button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
+                        if (service == null) return;
                         service.pause();
                     }
                 });

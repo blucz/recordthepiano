@@ -2,8 +2,10 @@ package com.blucz.recordthepiano;
 
 import android.app.IntentService;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Handler;
@@ -94,7 +96,6 @@ public class NetworkService extends Service {
         }, 0, 2, TimeUnit.SECONDS);
         ensureConnected();
         Log.d(TAG, "done creating networkservice");
-
     }
 
     @Override
