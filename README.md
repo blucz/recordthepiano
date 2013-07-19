@@ -32,15 +32,15 @@ Hardware
 
 Remote control in its dock
 
-![remote](https://raw.github.com/blucz/recordthepiano/master/images/remote.png)
+![remote](https://raw.github.com/blucz/recordthepiano/master/images/remote.jpg)
 
 The recorder hardware
 
-![box](https://raw.github.com/blucz/recordthepiano/master/images/box.png)
+![box](https://raw.github.com/blucz/recordthepiano/master/images/box.jpg)
 
 The recorder hardware's guts
 
-![guts](https://raw.github.com/blucz/recordthepiano/master/images/guts.png)
+![guts](https://raw.github.com/blucz/recordthepiano/master/images/guts.jpg)
 
 Dependencies
 ------------
