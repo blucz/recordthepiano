@@ -36,7 +36,7 @@ const int    FRAMES_PER_BUFFER            = 4410;
 
 const int    BASE_RMS_NBUFFERS            = 20;        // number of buffers of audio to use when determining the 'quiet' audio level at startup
 const int    PREROLL_NBUFFERS             = 25;        // number of buffers of pre-roll to keep around 
-const double NOISE_THRESHOLD              = 1.3;       // if RMS for a buffer > base_rms * NOISE_THRESHOLD, then it is considered noisy
+const double NOISE_THRESHOLD              = 1.3;       // if RMS for a buffer > status.base_level * NOISE_THRESHOLD, then it is considered noisy
 const int    MIN_RECORDING_LENGTH_SECONDS = 15;
 
 #define      LISTEN_PORT                  (10123)
@@ -78,7 +78,9 @@ typedef struct {
     record_mode_t       record_mode;
     state_t             state;
     double              level;
+    double              base_level;
     int                 clipped_frames;
+    double              recording_time;
 } audio_status_t;
 
 typedef enum {
@@ -112,9 +114,11 @@ typedef struct {
 
 static audio_status_t DEFAULT_AUDIO_STATUS = {
     .level          = 0.0,
+    .base_level     = 0.0,
     .record_mode    = RECORD_MODE_AUTO,
     .state          = STATE_INITIALIZING,
-    .clipped_frames = 0
+    .clipped_frames = 0,
+    .recording_time = 0.0
 };
 
 typedef struct {
@@ -162,7 +166,6 @@ int run(int device) {
     }
 
     int    buf_idx        = 0;
-    double base_rms       = 0;
     int    record_buf_idx = 0;
 
     // preroll + cached RMS values
@@ -175,6 +178,7 @@ int run(int device) {
     char tmpfilenamebuf[1024];
     char filenamebuf[1024];
     FILE *file = NULL;
+    double base_rms_accum = 0;
 
     audio_status_t status = DEFAULT_AUDIO_STATUS;
 
@@ -234,7 +238,7 @@ int run(int device) {
         int loud_bufs = 0;
         int idx;
         for (idx = 0; idx < PREROLL_NBUFFERS; idx++) {
-            if (past_rms[idx] > base_rms * NOISE_THRESHOLD) loud_bufs++;
+            if (past_rms[idx] > status.base_level * NOISE_THRESHOLD) loud_bufs++;
         }
 
         // process pending commands
@@ -253,11 +257,13 @@ int run(int device) {
 
                 case COMMAND_TYPE_INITIALIZE: {
                     memset(rawsamples, 0, sizeof(rawsamples));
-                    memset(samples, 0, sizeof(rawsamples));
-                    memset(past_rms, 0, sizeof(rawsamples));
+                    memset(samples, 0, sizeof(samples));
+                    memset(past_rms, 0, sizeof(past_rms));
+                    record_buf_idx = 0;
                     status.state = STATE_INITIALIZING;   
-                    buf_idx      = 0;
-                    base_rms     = 0;
+                    buf_idx        = 0;
+                    base_rms_accum = 0;
+                    status.base_level = 0;
                     if (status.state == STATE_RECORDING || status.state == STATE_PAUSED) {
                         stop_recording   = true;
                         cancel_recording = true;
@@ -296,15 +302,18 @@ int run(int device) {
                 } break;
 
                 case COMMAND_TYPE_STOP: {
-                    status.record_mode = RECORD_MODE_MANUAL;
                     if (status.state == STATE_RECORDING || status.state == STATE_PAUSED) {
+                        loud_bufs = 0;
+                        status.record_mode = RECORD_MODE_MANUAL;
+                        memset(past_rms, 0, sizeof(past_rms));
                         stop_recording = true;
                     }
                 } break;
 
                 case COMMAND_TYPE_CANCEL: {
-                    status.record_mode = RECORD_MODE_MANUAL;
                     if (status.state == STATE_RECORDING || status.state == STATE_PAUSED) {
+                        loud_bufs = 0;
+                        memset(past_rms, 0, sizeof(past_rms));
                         stop_recording   = true;
                         cancel_recording = true;
                     }
@@ -325,7 +334,7 @@ int run(int device) {
                 break;
 
             case STATE_IDLE:
-                if (status.record_mode == RECORD_MODE_AUTO && loud_bufs > (PREROLL_NBUFFERS / 3)) {
+                if (status.record_mode == RECORD_MODE_AUTO && loud_bufs > (PREROLL_NBUFFERS / 4)) {
                     start_recording = true;
                 }
                 break;
@@ -381,7 +390,7 @@ int run(int device) {
 
             if (!skip_preroll) {
                 // encode the preroll
-                for (idx = preroll_idx + 2; idx < preroll_idx + PREROLL_NBUFFERS; idx++) {
+                for (idx = preroll_idx + (PREROLL_NBUFFERS * 2 / 3); idx < preroll_idx + PREROLL_NBUFFERS; idx++) {
                     int realidx           = idx     % PREROLL_NBUFFERS;
                     if (!FLAC__stream_encoder_process_interleaved(encoder, &samples[realidx * FRAMES_PER_BUFFER * CHANNELS], FRAMES_PER_BUFFER)) {
                         tracef("flac encoder process failed");
@@ -422,19 +431,22 @@ int run(int device) {
 
         if (status.state == STATE_RECORDING) {
             record_buf_idx++;
+            status.recording_time = (double)record_buf_idx * (double)FRAMES_PER_BUFFER /  (double)SAMPLE_RATE;
             if (!FLAC__stream_encoder_process_interleaved(encoder, &samples[sample_offset], FRAMES_PER_BUFFER)) {
                 tracef("flac encoder process failed");
                 return 1;
             }
+        } else {
+            status.recording_time = (double)record_buf_idx * (double)FRAMES_PER_BUFFER /  (double)SAMPLE_RATE;
         }
 
         if (status.state == STATE_INITIALIZING) {
             if (buf_idx < BASE_RMS_NBUFFERS) {
-                base_rms += rms;
+                base_rms_accum += rms;
             }
             if (buf_idx == BASE_RMS_NBUFFERS) {
-                base_rms /= BASE_RMS_NBUFFERS;
-                tracef("ready to record. Baseline rms = %f", base_rms);
+                status.base_level = base_rms_accum / BASE_RMS_NBUFFERS;
+                tracef("ready to record. Baseline rms = %f", status.base_level);
                 status.state = STATE_IDLE;
             }
         }
@@ -446,7 +458,7 @@ int run(int device) {
         }
     }
 
-    //tracef("got frames rms=%f base=%f", rms, base_rms);
+    //tracef("got frames rms=%f base=%f", rms, status.base_level);
 
     return 0;
 }
@@ -469,17 +481,21 @@ void ev_endconn(connection_t *conn, bool err) {
     }
 }
 
-static void broadcast(const char *buf) {
+static void send_message(connection_t *conn, const char *buf) {
     int len = strlen(buf);
+    int i; 
+    int byteswritten = send(conn->sock, buf, len, 0);
+    if (len != byteswritten) {
+        ev_endconn(conn, byteswritten < 0);
+    }
+}
+
+static void broadcast_message(const char *buf) {
     int i; 
     for (i = 0; i < MAX_CONNECTIONS; i++) {
         connection_t *conn = &connections[i];
-        if (conn->sock != 0) {
-            int byteswritten = send(conn->sock, buf, len, 0);
-            if (len != byteswritten) {
-                ev_endconn(&connections[i], byteswritten < 0);
-            }
-        }
+        if (conn->sock != 0) 
+            send_message(conn, buf);
     }
 }
 
@@ -521,11 +537,20 @@ int ev_line(void *userdata, char *line, int len) {
     return 0;
 }
 
-void ev_newconn(connection_t *conn, int conn_sock) {
+void ev_newconn(connection_t *conn, int conn_sock, audio_status_t *status) {
     conn->sock = conn_sock;
     lineparser_init(&conn->lineparser, ev_line, conn);
-
-    // XXX: send status line
+    char buf[1024];
+    snprintf(buf, sizeof(buf), "level %f\n", status->level);
+    send_message(conn, buf);
+    snprintf(buf, sizeof(buf), "time %f\n", status->recording_time);
+    send_message(conn, buf);
+    snprintf(buf, sizeof(buf), "mode %s\n", record_mode_to_str(status->record_mode));
+    send_message(conn, buf);
+    snprintf(buf, sizeof(buf), "state %s\n", state_to_str(status->state));
+    send_message(conn, buf);
+    snprintf(buf, sizeof(buf), "base_level %f\n", status->base_level);
+    send_message(conn, buf);
 }
 
 void *network_thread_main(void *arg) {
@@ -597,23 +622,32 @@ void *network_thread_main(void *arg) {
                 char buf[1024];
                 if (newstatus.level       != status.level) {
                     snprintf(buf, sizeof(buf), "level %f\n", newstatus.level);
-                    broadcast(buf);
+                    broadcast_message(buf);
                     status.level = newstatus.level;
+                }
+                if (newstatus.recording_time != status.recording_time) {
+                    snprintf(buf, sizeof(buf), "time %f\n", newstatus.recording_time);
+                    broadcast_message(buf);
+                    status.recording_time = newstatus.recording_time;
                 }
                 if (newstatus.record_mode != status.record_mode) {
                     snprintf(buf, sizeof(buf), "mode %s\n", record_mode_to_str(newstatus.record_mode));
-                    broadcast(buf);
+                    broadcast_message(buf);
                     status.record_mode = newstatus.record_mode;
                 }
                 if (newstatus.state != status.state) {
                     snprintf(buf, sizeof(buf), "state %s\n", state_to_str(newstatus.state));
-                    broadcast(buf);
+                    broadcast_message(buf);
                     status.state = newstatus.state;
                 }
-
+                if (newstatus.base_level != status.base_level) {
+                    snprintf(buf, sizeof(buf), "base_level %f\n", status.base_level);
+                    broadcast_message(buf);
+                    status.base_level = newstatus.base_level;
+                }
                 if (newstatus.clipped_frames != 0) {
                     snprintf(buf, sizeof(buf), "clip %d\n", newstatus.clipped_frames);
-                    broadcast(buf);
+                    broadcast_message(buf);
                 }
 
             } else if (events[n].data.fd == listen_sock) {
@@ -643,7 +677,7 @@ void *network_thread_main(void *arg) {
 
                         tracef("accepted new connection");
                         found = 1;
-                        ev_newconn(&connections[i], conn_sock);
+                        ev_newconn(&connections[i], conn_sock, &status);
                         break;
                     }
                 }
