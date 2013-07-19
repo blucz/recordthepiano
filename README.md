@@ -22,6 +22,11 @@ https://soundcloud.com/blucz
 
 That's it.
 
+Android Remote Control
+----------------------
+
+![screenshot](https://raw.github.com/blucz/recordthepiano/master/screenshot.png)
+
 Dependencies
 ------------
 
