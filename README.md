@@ -13,7 +13,7 @@ When the device boots up, it hops on my wifi network then launches the recordthe
 The recordthepiano app listens to the audio output from the piano constantly, monitoring for sound. It
 automatically starts/stops recording based on whether the piano is making noise.
 
-An android app allows for additional remote control and feedback for the recording process. I have dedicated a nexus 7 to this purpose. 
+An android app allows for remote control and feedback for the recording process. I run this on a docked nexus 7 sitting on the piano.
 
 Recorded audio is encoded in 44100/16/2 FLAC in real-time. As soon as a recording is completed, the recordthepiano 
 app invokes recordthepiano_upload, a ruby script, that uploads the FLAC to my soundcloud account:
