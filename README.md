@@ -6,7 +6,7 @@ Automatic 24/7 recording and soundcloud upload for my Yamaha N3 Piano.
 How it works
 ------------
 
-A tiny embedded linux device (Odroid-U2) is plugged into a little Behringer USB mixer, which is plugged into the piano using analog audio cables.
+A tiny embedded linux device (Odroid-U2) is plugged into a Behringer USB mixer, which is plugged into the piano using analog audio cables.
 
 When the device boots up, it hops on my wifi network then launches the recordthepiano app, written in C.
 
@@ -25,7 +25,22 @@ That's it.
 Android Remote Control
 ----------------------
 
-![screenshot](https://raw.github.com/blucz/recordthepiano/master/screenshot.png)
+![screenshot](https://raw.github.com/blucz/recordthepiano/master/images/screenshot.png)
+
+Hardware
+--------
+
+Remote control in its dock
+
+![remote](https://raw.github.com/blucz/recordthepiano/master/images/remote.png)
+
+The recorder hardware
+
+![box](https://raw.github.com/blucz/recordthepiano/master/images/box.png)
+
+The recorder hardware's guts
+
+![guts](https://raw.github.com/blucz/recordthepiano/master/images/guts.png)
 
 Dependencies
 ------------
