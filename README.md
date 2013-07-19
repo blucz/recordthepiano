@@ -44,6 +44,9 @@ by using nc to connect to the port.
 
 Clients send commands to recordthepiano + receive status messages.
 
+Upon accepting a new connection, recordthepiano sends all of the status messages to the client to ensure that it 
+has correct initial values.
+
 Commands:
 
     auto        - switch into automatic recording mode 
@@ -56,10 +59,11 @@ Commands:
 
 Status messages:
 
-    level <rms level>           - indicates noise level of last 0.1s buffer
-    state <state>               - indicates the current state (idle,recording,paused,initializing)
-    mode <mode>                 - indicates the current record mode (audo,manual)
-    clip <nframes>              - indicates that <nframes> frames have clipped
+    base_level <rms level>      - calibrated base noise level  (rms ranges from [0,0.5])
+    level <rms level>           - noise level of last 0.1s buffer (rms ranges from [0,0.5])
+    state <state>               - the current state (idle,recording,paused,initializing)
+    mode <mode>                 - the current record mode (audo,manual)
+    clip <nframes>              - that <nframes> frames have clipped
 
 Bugs
 ----
