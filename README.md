@@ -22,13 +22,8 @@ https://soundcloud.com/blucz
 
 That's it.
 
-Android Remote Control
-----------------------
-
-![screenshot](https://raw.github.com/blucz/recordthepiano/master/images/screenshot.png)
-
-Hardware
---------
+Photos  
+------
 
 Remote control in its dock
 
@@ -41,6 +36,10 @@ The recorder hardware
 The recorder hardware's guts
 
 ![guts](https://raw.github.com/blucz/recordthepiano/master/images/guts.jpg)
+
+Screenshot of remote control
+
+![screenshot](https://raw.github.com/blucz/recordthepiano/master/images/screenshot.png)
 
 Dependencies
 ------------
