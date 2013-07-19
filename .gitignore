@@ -2,3 +2,10 @@ bin
 obj
 Debug
 Release
+*.class
+*.idea
+build
+debug
+.gradle
+.DS_Store
+
