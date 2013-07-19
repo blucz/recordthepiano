@@ -7,4 +7,5 @@ Release
 build
 debug
 .gradle
+.DS_Store
 
